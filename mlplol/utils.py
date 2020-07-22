@@ -5,9 +5,9 @@ import functools
 
 def squared_loss(y1, y2):
     N = y1.shape[0]
-    if len(y1.shape) > 2:
+    if len(y1.shape) < 2:
         y1 = np.expand_dims(y1, 1)
-    if len(y2.shape) > 2:
+    if len(y2.shape) < 2:
         y2 = np.expand_dims(y2, 1)
     loss = 1*np.sum((y1 - y2)**2)/N
     return(loss)
@@ -42,7 +42,7 @@ def gradient_checker_(w, x, y, activation_function, eps, classify=False):
     shapes = [i.shape for i in w]
     nn_outs = neural_network(x, w, activation_function)
     a = nn_outs['first_mult']
-    z = nn_outs['first_mult_nonlin']
+    z = nn_outs['z1']
     out = nn_outs['output']
     x_ones = np.c_[np.ones(x.shape[0]), x]
     true_grad = nn_grad(x_ones, y, a, z, out, w, activation_function)
@@ -77,7 +77,7 @@ def gradient_checker(w, x, y, activation_function='relu', eps = np.sqrt(np.finfo
         y = y.reshape(y.shape[0], 1)
     nn_outs = neural_network(x, w, activation_function)
     a = nn_outs['first_mult']
-    z = nn_outs['first_mult_nonlin']
+    z = nn_outs['z1']
     out = nn_outs['output']
     true_error = squared_loss(y, out)
     x_ones = np.c_[np.ones(x.shape[0]), x]

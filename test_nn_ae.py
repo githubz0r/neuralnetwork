@@ -45,9 +45,9 @@ print([i.shape for i in test_gradients])
 
 
 
-diabetes_nn = mlp_sinc = mlplol.NNregressor_onelayer(activation_function = 'softsign')
+diabetes_nn = mlplol.NNregressor_onelayer(activation_function = 'softsign')
 diabetes_nn.estimate_weights(diabetes_split['trainx'], diabetes_split['trainx'], diabetes_split['valx'],
-                             diabetes_split['valx'], n_hidden=100, 
+                             diabetes_split['valx'], n_hidden=2, 
                               iterations=100, patience=10, rate=0.001, 
                               verbose=False, weight_initialization_factors=None)
 

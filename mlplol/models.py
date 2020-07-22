@@ -19,7 +19,7 @@ def neural_network(x, w, activation_function, classify = False, has_ones = False
         z2 = a2
     else:
         z2 = np.exp(z)/(np.exp(z)+1)
-    return(dict(first_mult = a, first_mult_nonlin = z, second_mult = a2, output = z2))
+    return(dict(first_mult = a, z1 = z, second_mult = a2, output = z2))
 
 def relu(x):
     zeroes = np.zeros(x.shape)
@@ -92,7 +92,7 @@ def nn_gradient_descent(x_train, y_train, x_val, y_val, n_hidden, rate, iteratio
         w=[w_hidden0, w_out0]
         nn_outs_train = neural_network(x_train, w, activation_function, has_ones=True)
         a = nn_outs_train['first_mult']
-        z = nn_outs_train['first_mult_nonlin']
+        z = nn_outs_train['z1']
         out = nn_outs_train['output']
         train_error = 1*np.sum((y_train - out)**2)/N
         if len(out.shape)<2:
@@ -144,8 +144,9 @@ class NNregressor_onelayer:
         self.iterations = training_results['iterations']
     def predict(self, x):
         predictions = neural_network(x, self.weights, activation_function = self.activation_function)
-        if len(x.shape) < 2:
-            pred = predictions['output'].ravel()
-        else:
-            pred = predictions['output']
+        pred = predictions['output']
         return(pred)
+    def encode(self, x):
+        hidden_out = neural_network(x, self.weights, activation_function = self.activation_function)['z1']
+        encoding = hidden_out[:, 1:] # remove bias column of ones
+        return(encoding)

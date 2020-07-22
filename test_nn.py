@@ -42,7 +42,7 @@ test_gradients = mlplol.gradient_quotients([wtest1, wtest2], diabetes_split['tra
 print([i for i in test_gradients])
 
 
-diabetes_nn = mlp_sinc = mlplol.NNregressor_onelayer(activation_function = 'relu')
+diabetes_nn = mlplol.NNregressor_onelayer(activation_function = 'relu')
 diabetes_nn.estimate_weights(diabetes_split['trainx'], diabetes_split['trainy'], diabetes_split['valx'],
                              diabetes_split['valy'], n_hidden=100, 
                               iterations=100, patience=10, rate=0.001, 
@@ -55,3 +55,7 @@ plt.ylabel('Loss')
 plt.xlabel('Iterations')
 plt.legend(loc='upper right')
 plt.show()
+
+test_pred = diabetes_nn.predict(diabetes_split['testx'])
+test_loss = mlplol.squared_loss(test_pred, diabetes_split['testy'])
+print('test loss: ', test_loss)
