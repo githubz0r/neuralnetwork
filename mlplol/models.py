@@ -16,9 +16,9 @@ def neural_network(x, w, activation_function, classify = False, has_ones = False
     z = np.c_[np.ones(z.shape[0]), z] # ones for bias
     a2 = z@w1
     if not classify:
-        z2 = z@w1
+        z2 = a2
     else:
-        z2 = exp(z)/(exp(z)+1)
+        z2 = np.exp(z)/(np.exp(z)+1)
     return(dict(first_mult = a, first_mult_nonlin = z, second_mult = a2, output = z2))
 
 def relu(x):
@@ -37,14 +37,20 @@ def nn_grad(x, y, a, z, out, w, activation_function):
     N = x.shape[0]
     delta_outs = out-y # N*1
     #delta_outs_repeated = np.repeat((out-y), w_out.shape[0], axis=1) # N*(n_hidden+1)
-    output_grad = np.sum(np.multiply(delta_outs, z), axis=0)/N # gradient of output unit
+    #output_grad1 = np.zeros(w_out.shape)
+    #for i in range(N):
+        #w_i = np.outer(z[i, :], delta_outs[i, :])
+        #output_grad1 += w_i/N
+    output_grad = np.tensordot(z, delta_outs, axes=([0, 0]))/N
+    #output_grad = np.sum(np.multiply(delta_outs, z), axis=0)/N # gradient of output unit
     if len(output_grad.shape)<2:
         output_grad = output_grad.reshape(output_grad.shape[0], 1)
     if activation_function == 'relu':
         hidden_activation_deriv = relu_grad(a)
     elif activation_function == 'softsign':
         hidden_activation_deriv = 1/((1+np.abs(a))**2)
-    delta_hidden_sum_parts = delta_outs@w_out.T # this must be a sum with more than 1 output neuron
+    #delta_hidden_sum_parts = delta_outs@w_out.T # this must be a sum with more than 1 output neuron
+    delta_hidden_sum_parts = (w_out@delta_outs.T).T
     delta_hidden_sum_parts = delta_hidden_sum_parts[:,1:] # removing bias column
     delta_hidden = hidden_activation_deriv*delta_hidden_sum_parts
     hidden_grad = 0
@@ -53,7 +59,7 @@ def nn_grad(x, y, a, z, out, w, activation_function):
         vector_of_deltas = vector_of_deltas.reshape(a.shape[1],1)
         grad_element = x[i,:]*vector_of_deltas
         hidden_grad += grad_element/N
-    return([hidden_grad.T, output_grad])
+    return([2*hidden_grad.T, 2*output_grad])
 
 def nn_gradient_descent(x_train, y_train, x_val, y_val, n_hidden, rate, iterations, patience,
                        verbose, weights, initialization_factors, activation_function):
@@ -88,7 +94,7 @@ def nn_gradient_descent(x_train, y_train, x_val, y_val, n_hidden, rate, iteratio
         a = nn_outs_train['first_mult']
         z = nn_outs_train['first_mult_nonlin']
         out = nn_outs_train['output']
-        train_error = 0.5*np.sum((y_train - out)**2)/N
+        train_error = 1*np.sum((y_train - out)**2)/N
         if len(out.shape)<2:
             out=out.reshape(y_train.shape[0], 1) # reshaping to get broadcasting to work later
         train_loss.append(train_error)
@@ -98,7 +104,7 @@ def nn_gradient_descent(x_train, y_train, x_val, y_val, n_hidden, rate, iteratio
         w_hidden1 = w_hidden0 - rate*hidden_grad #/N
         w_out1 = w_out0 - rate*output_grad #/N
         val_out = neural_network(x_val, w, activation_function=activation_function)['output']
-        val_error = 0.5*np.sum((y_val - val_out)**2)/x_val.shape[0]
+        val_error = 1*np.sum((y_val - val_out)**2)/x_val.shape[0]
         iterations -= 1
         if verbose: 
             print('iterations: ', max_iter-iterations)
@@ -138,4 +144,8 @@ class NNregressor_onelayer:
         self.iterations = training_results['iterations']
     def predict(self, x):
         predictions = neural_network(x, self.weights, activation_function = self.activation_function)
-        return(predictions['second_mult'].ravel())
+        if len(x.shape) < 2:
+            pred = predictions['output'].ravel()
+        else:
+            pred = predictions['output']
+        return(pred)

@@ -9,7 +9,7 @@ def squared_loss(y1, y2):
         y1 = np.expand_dims(y1, 1)
     if len(y2.shape) > 2:
         y2 = np.expand_dims(y2, 1)
-    loss = 0.5*np.sum((y1 - y2)**2)/N
+    loss = 1*np.sum((y1 - y2)**2)/N
     return(loss)
 
 def rebuild_from_shapes(flat_vector, shapes):
@@ -27,7 +27,7 @@ def nn_flat(w_flat, shapes, x, y, activation_function='relu', classify=False):
     w_subs = rebuild_from_shapes(w_flat, shapes)
     outputs = neural_network(x, w_subs, 'relu')['output']
     if not classify:
-        error = 0.5*np.sum((outputs-y.reshape(y.shape[0], 1))**2)/y.shape[0]
+        error = 1*np.sum((outputs-y.reshape(y.shape[0], 1))**2)/y.shape[0]
     else:
         error = np.sum(y*np.log(outputs)+(1-y)*np.log(1-outputs))/y.shape[0]
     return(error)
