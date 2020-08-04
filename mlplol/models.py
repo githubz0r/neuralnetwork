@@ -19,7 +19,7 @@ def neural_network(x, w, activation_function, classify = False, has_ones = False
         z2 = a2
     else:
         z2 = np.exp(z)/(np.exp(z)+1)
-    return(dict(first_mult = a, z1 = z, second_mult = a2, output = z2))
+    return(dict(a1 = a, z1 = z, a2 = a2, output = z2))
 
 def relu(x):
     zeroes = np.zeros(x.shape)
@@ -32,34 +32,23 @@ def relu_grad(x):
 
 
 def nn_grad(x, y, a, z, out, w, activation_function):
-    '''y must be an array of dimension at least 2'''
+    '''returns the gradient of the MLP wrt weight arrays w'''
+    assert len(y.shape) > 1, 'y must be an array of dimension at least 2'
     w_out = w[1]
     N = x.shape[0]
-    delta_outs = out-y # N*1
-    #delta_outs_repeated = np.repeat((out-y), w_out.shape[0], axis=1) # N*(n_hidden+1)
-    #output_grad1 = np.zeros(w_out.shape)
-    #for i in range(N):
-        #w_i = np.outer(z[i, :], delta_outs[i, :])
-        #output_grad1 += w_i/N
+    delta_outs = out-y
     output_grad = np.tensordot(z, delta_outs, axes=([0, 0]))/N
-    #output_grad = np.sum(np.multiply(delta_outs, z), axis=0)/N # gradient of output unit
     if len(output_grad.shape)<2:
         output_grad = output_grad.reshape(output_grad.shape[0], 1)
     if activation_function == 'relu':
         hidden_activation_deriv = relu_grad(a)
     elif activation_function == 'softsign':
         hidden_activation_deriv = 1/((1+np.abs(a))**2)
-    #delta_hidden_sum_parts = delta_outs@w_out.T # this must be a sum with more than 1 output neuron
-    delta_hidden_sum_parts = (w_out@delta_outs.T).T
+    delta_hidden_sum_parts = delta_outs@w_out.T
     delta_hidden_sum_parts = delta_hidden_sum_parts[:,1:] # removing bias column
     delta_hidden = hidden_activation_deriv*delta_hidden_sum_parts
-    hidden_grad = 0
-    for i in range(N):
-        vector_of_deltas = delta_hidden[i,:]
-        vector_of_deltas = vector_of_deltas.reshape(a.shape[1],1)
-        grad_element = x[i,:]*vector_of_deltas
-        hidden_grad += grad_element/N
-    return([2*hidden_grad.T, 2*output_grad])
+    hidden_grad = np.tensordot(x, delta_hidden, axes=[0, 0])/N
+    return([2*hidden_grad, 2*output_grad])
 
 def nn_gradient_descent(x_train, y_train, x_val, y_val, n_hidden, rate, iterations, patience,
                        verbose, weights, initialization_factors, activation_function):
@@ -91,7 +80,7 @@ def nn_gradient_descent(x_train, y_train, x_val, y_val, n_hidden, rate, iteratio
     while iterations > 0 and patience_counter >0:
         w=[w_hidden0, w_out0]
         nn_outs_train = neural_network(x_train, w, activation_function, has_ones=True)
-        a = nn_outs_train['first_mult']
+        a = nn_outs_train['a1']
         z = nn_outs_train['z1']
         out = nn_outs_train['output']
         train_error = 1*np.sum((y_train - out)**2)/N

@@ -33,12 +33,13 @@ diabetes_split = split_data_np(diabetes.data, diabetes.target, 0.2, 0.2)
 print('''Before we train, lets check that the gradient is correct. We'll make up some random weights
     with e.g 10 neurons and check quotients of the gradient computed by the function and the finite difference grad.''')
 
-wtest1 = np.random.normal(0, 1, (diabetes.data.shape[1]+1, 10))
-wtest2 = np.random.normal(0, 1, (11, 1))
+D_test = 5
+wtest1 = np.random.normal(0, 1, (diabetes.data.shape[1]+1, D_test))
+wtest2 = np.random.normal(0, 1, (D_test+1, 1))
 
 test_gradients = mlplol.gradient_quotients([wtest1, wtest2], diabetes_split['trainx'],
                 diabetes_split['trainy'])
-
+print(wtest1.shape, wtest2.shape)
 print([i for i in test_gradients])
 
 

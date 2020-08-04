@@ -41,7 +41,7 @@ def gradient_checker_(w, x, y, activation_function, eps, classify=False):
         y = y.reshape(y.shape[0], 1)
     shapes = [i.shape for i in w]
     nn_outs = neural_network(x, w, activation_function)
-    a = nn_outs['first_mult']
+    a = nn_outs['a1']
     z = nn_outs['z1']
     out = nn_outs['output']
     x_ones = np.c_[np.ones(x.shape[0]), x]
@@ -61,7 +61,8 @@ def calc_approx_grad(w, x, y, eps, true_loss, *args):
                 w_k_f = np.copy(w_k)
                 w_k_f[i, j] = w_k[i, j]+eps
                 w_list = w[0:k] + [w_k_f] + w[k+1:]
-                output_kij = neural_network(x, w_list, *args)['output']
+                output_kij = neural_network(x, w_list, *args)['output'] 
+                # remember *args is non-keyword, might change idk
                 finite_loss = squared_loss(y, output_kij)
                 finite_diff = (finite_loss - true_loss)/eps
                 finite_grad_k[i, j] = finite_diff
@@ -76,7 +77,7 @@ def gradient_checker(w, x, y, activation_function='relu', eps = np.sqrt(np.finfo
     if len(y.shape)==1:
         y = y.reshape(y.shape[0], 1)
     nn_outs = neural_network(x, w, activation_function)
-    a = nn_outs['first_mult']
+    a = nn_outs['a1']
     z = nn_outs['z1']
     out = nn_outs['output']
     true_error = squared_loss(y, out)
